@@ -18,11 +18,6 @@ uv run pytest                      # all tests
 uv run pytest tests/test_recognition.py  # single test file
 uv run pytest tests/test_recognition.py::test_name  # single test
 
-# Benchmarks
-uv run python benchmark/detection.py --max_rows 256
-uv run python benchmark/recognition.py
-uv run python benchmark/layout.py
-uv run python benchmark/table_recognition.py --max_rows 1024
 ```
 
 ## Architecture
@@ -42,10 +37,8 @@ All models follow a predictor pattern inheriting from `surya/common/predictor.py
 ### Key Directories
 - `surya/common/` — Shared utilities: `predictor.py` (base class), `polygon.py`, model loaders (`load.py`, `s3.py`), architecture bases (`surya/`, `donut/`, `adetr/`)
 - `surya/foundation/` — Foundation model: loader, processor, cache implementations (dynamic/static), utilities
-- `surya/scripts/` — Finetuning script (`finetune_ocr.py`)
 - `surya/settings.py` — All configuration via pydantic-settings `Settings` class. Every setting is overridable via environment variables.
 - `surya/input/` — Image preprocessing (slicing, polygon extraction)
-- `benchmark/` — Benchmark scripts for detection, recognition, layout, table recognition
 
 ### Configuration
 Settings are in `surya/settings.py` using pydantic-settings. Override any setting with env vars (e.g., `TORCH_DEVICE=cuda`, `RECOGNITION_BATCH_SIZE=512`). Key batch size env vars: `DETECTOR_BATCH_SIZE`, `RECOGNITION_BATCH_SIZE`, `LAYOUT_BATCH_SIZE`, `TABLE_REC_BATCH_SIZE`. Model compilation: `COMPILE_DETECTOR`, `COMPILE_LAYOUT`, `COMPILE_TABLE_REC`, `COMPILE_ALL`.

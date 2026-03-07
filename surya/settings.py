@@ -45,7 +45,6 @@ class Settings(BaseSettings):
     # Text detection
     DETECTOR_BATCH_SIZE: Optional[int] = None  # Defaults to 2 for CPU/MPS, 32 otherwise
     DETECTOR_MODEL_CHECKPOINT: str = "s3://text_detection/2025_05_07"
-    DETECTOR_BENCH_DATASET_NAME: str = "vikp/doclaynet_bench"
     DETECTOR_IMAGE_CHUNK_HEIGHT: int = (
         1400  # Height at which to slice images vertically
     )
@@ -85,7 +84,6 @@ class Settings(BaseSettings):
     RECOGNITION_FONT_DL_BASE: str = (
         "https://github.com/satbyy/go-noto-universal/releases/download/v7.0"
     )
-    RECOGNITION_BENCH_DATASET_NAME: str = "vikp/rec_bench"
     RECOGNITION_PAD_VALUE: int = 255  # Should be 0 or 255
 
     # Layout
@@ -97,21 +95,15 @@ class Settings(BaseSettings):
     }  # When to start slicing images
     LAYOUT_SLICE_SIZE: Dict = {"height": 1200, "width": 1200}  # Size of slices
     LAYOUT_BATCH_SIZE: Optional[int] = None
-    LAYOUT_BENCH_DATASET_NAME: str = "vikp/publaynet_bench"
     LAYOUT_MAX_BOXES: int = 100
     COMPILE_LAYOUT: bool = False
-    LAYOUT_BENCH_DATASET_NAME: str = "vikp/publaynet_bench"
 
     # Table Rec
     TABLE_REC_MODEL_CHECKPOINT: str = "s3://table_recognition/2025_02_18"
     TABLE_REC_IMAGE_SIZE: Dict = {"height": 768, "width": 768}
     TABLE_REC_MAX_BOXES: int = 150
     TABLE_REC_BATCH_SIZE: Optional[int] = None
-    TABLE_REC_BENCH_DATASET_NAME: str = "datalab-to/fintabnet_bench"
     COMPILE_TABLE_REC: bool = False
-
-    # Tesseract (for benchmarks only)
-    TESSDATA_PREFIX: Optional[str] = None
 
     COMPILE_ALL: bool = False
 
