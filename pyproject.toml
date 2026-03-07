@@ -46,14 +46,7 @@ Repository = "https://github.com/sakshamsaxena/surya"
 
 [dependency-groups]
 dev = [
-    "jupyter>=1.0.0",
-    "pytesseract>=0.3.10",
-    "pymupdf>=1.23.8",
-    "datasets>=2.16.1",
-    "rapidfuzz>=3.6.1",
     "pytest>=8.3.4",
-    "pdftext>=0.5.1",
-    "tabulate>=0.9.0",
     "pre-commit>=4.2.0",
 ]
 

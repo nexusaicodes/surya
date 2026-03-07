@@ -12,12 +12,16 @@ Trimmed fork of Surya focused on **English-only OCR, layout analysis, and table 
 # Install (requires Python 3.10+, PyTorch 2.7+, uv)
 uv sync                     # main deps
 uv sync --group dev         # main + dev deps
+pre-commit install           # enable ruff linting/formatting on commit
 
 # Run tests
 uv run pytest                      # all tests
 uv run pytest tests/test_recognition.py  # single test file
 uv run pytest tests/test_recognition.py::test_name  # single test
 
+# Lint / format manually
+uv run ruff check --fix .    # lint
+uv run ruff format .         # format
 ```
 
 ## Architecture

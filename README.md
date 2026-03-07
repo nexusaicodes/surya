@@ -86,6 +86,7 @@ All settings are in `surya/settings.py` and overridable via environment variable
 git clone https://github.com/sakshamsaxena/surya.git
 cd surya
 uv sync --group dev
+pre-commit install          # enable ruff linting/formatting on commit
 uv run pytest
 ```
 
