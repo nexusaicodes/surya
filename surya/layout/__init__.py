@@ -14,7 +14,7 @@ from surya.common.util import clean_boxes
 
 class LayoutPredictor(BasePredictor):
     batch_size = settings.LAYOUT_BATCH_SIZE
-    default_batch_sizes = {"cpu": 4, "mps": 4, "cuda": 32, "xla": 16}
+    default_batch_sizes = {"cpu": 4, "mps": 4, "cuda": 32}
 
     # Override base init - Do not load model
     def __init__(self, foundation_predictor: FoundationPredictor):

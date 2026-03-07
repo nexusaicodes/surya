@@ -9,7 +9,6 @@ from PIL import Image
 from tqdm import tqdm
 
 from surya.common.predictor import BasePredictor
-from surya.common.xla import mark_step
 
 from surya.detection.loader import DetectionModelLoader
 from surya.detection.parallel import FakeExecutor
@@ -22,7 +21,7 @@ from surya.detection.heatmap import parallel_get_boxes
 class DetectionPredictor(BasePredictor):
     model_loader_cls = DetectionModelLoader
     batch_size = settings.DETECTOR_BATCH_SIZE
-    default_batch_sizes = {"cpu": 8, "mps": 8, "cuda": 36, "xla": 18}
+    default_batch_sizes = {"cpu": 8, "mps": 8, "cuda": 36}
 
     def __call__(
         self, images: List[Image.Image], batch_size=None, include_maps=False
@@ -33,10 +32,7 @@ class DetectionPredictor(BasePredictor):
 
         postprocessing_futures = []
         max_workers = min(settings.DETECTOR_POSTPROCESSING_CPU_WORKERS, len(images))
-        parallelize = (
-            not settings.IN_STREAMLIT
-            and len(images) >= settings.DETECTOR_MIN_PARALLEL_THRESH
-        )
+        parallelize = len(images) >= settings.DETECTOR_MIN_PARALLEL_THRESH
         executor = ThreadPoolExecutor if parallelize else FakeExecutor
         with executor(max_workers=max_workers) as e:
             for preds, orig_sizes in detection_generator:
@@ -127,7 +123,6 @@ class DetectionPredictor(BasePredictor):
                 logits = F.interpolate(
                     logits, size=correct_shape, mode="bilinear", align_corners=False
                 )
-            mark_step()
 
             logits = logits.to(torch.float32).cpu().numpy()
             preds = []

@@ -59,9 +59,7 @@ def fix_unbalanced_tags(
 
     open_tags = []
 
-    format_tags = extract_tags(special_tokens["formatting"]) + extract_tags(
-        special_tokens["math_external"]
-    )
+    format_tags = extract_tags(special_tokens["formatting"])
 
     for char in text_chars:
         if len(char.text) <= 1:

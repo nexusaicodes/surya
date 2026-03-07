@@ -14,7 +14,6 @@ class Settings(BaseSettings):
     TORCH_DEVICE: Optional[str] = None
     IMAGE_DPI: int = 96  # Used for detection, layout, reading order
     IMAGE_DPI_HIGHRES: int = 192  # Used for OCR, table rec
-    IN_STREAMLIT: bool = False  # Whether we're running in streamlit
     FLATTEN_PDF: bool = True  # Flatten PDFs by merging form fields before processing
     DISABLE_TQDM: bool = False  # Disable tqdm progress bars
     S3_BASE_URL: str = "https://models.datalab.to"
@@ -40,14 +39,6 @@ class Settings(BaseSettings):
 
         if torch.backends.mps.is_available():
             return "mps"
-
-        try:
-            import torch_xla
-
-            if len(torch_xla.devices()) > 0:
-                return "xla"
-        except Exception:
-            pass
 
         return "cpu"
 
@@ -110,7 +101,6 @@ class Settings(BaseSettings):
     LAYOUT_MAX_BOXES: int = 100
     COMPILE_LAYOUT: bool = False
     LAYOUT_BENCH_DATASET_NAME: str = "vikp/publaynet_bench"
-    ORDER_BENCH_DATASET_NAME: str = "vikp/order_bench"
 
     # Table Rec
     TABLE_REC_MODEL_CHECKPOINT: str = "s3://table_recognition/2025_02_18"
@@ -127,60 +117,34 @@ class Settings(BaseSettings):
 
     @computed_field
     def DETECTOR_STATIC_CACHE(self) -> bool:
-        return (
-            self.COMPILE_ALL
-            or self.COMPILE_DETECTOR
-            or self.TORCH_DEVICE_MODEL == "xla"
-        )  # We need to static cache and pad to batch size for XLA, since it will recompile otherwise
+        return self.COMPILE_ALL or self.COMPILE_DETECTOR
 
     @computed_field
     def LAYOUT_STATIC_CACHE(self) -> bool:
-        return (
-            self.COMPILE_ALL or self.COMPILE_LAYOUT or self.TORCH_DEVICE_MODEL == "xla"
-        )
-
-    @computed_field
-    def FOUNDATION_XLA(self) -> bool:
-        return (
-            self.TORCH_DEVICE_MODEL == "xla"
-        )  # We need to static cache and pad to batch size for XLA, since it will recompile otherwise
+        return self.COMPILE_ALL or self.COMPILE_LAYOUT
 
     @computed_field
     def FOUNDATION_STATIC_CACHE(self) -> bool:
-        return (
-            self.COMPILE_ALL
-            or self.COMPILE_FOUNDATION
-            or self.TORCH_DEVICE_MODEL == "xla"
-        )  # We need to static cache and pad to batch size for XLA, since it will recompile otherwise
+        return self.COMPILE_ALL or self.COMPILE_FOUNDATION
 
     @computed_field
     def TABLE_REC_STATIC_CACHE(self) -> bool:
-        return (
-            self.COMPILE_ALL
-            or self.COMPILE_TABLE_REC
-            or self.TORCH_DEVICE_MODEL == "xla"
-        )
+        return self.COMPILE_ALL or self.COMPILE_TABLE_REC
 
     @computed_field
     def MODEL_DTYPE(self) -> torch.dtype:
         if self.TORCH_DEVICE_MODEL == "cpu":
             return torch.float32
-        if self.TORCH_DEVICE_MODEL == "xla":
-            return torch.bfloat16
         return torch.float16
 
     @computed_field
     def MODEL_DTYPE_BFLOAT(self) -> torch.dtype:
         if self.TORCH_DEVICE_MODEL == "cpu":
             return torch.float32
-        if self.TORCH_DEVICE_MODEL == "mps":
-            return torch.bfloat16
         return torch.bfloat16
 
     @computed_field
     def INFERENCE_MODE(self) -> Callable:
-        if self.TORCH_DEVICE_MODEL == "xla":
-            return torch.no_grad
         return torch.inference_mode
 
     class Config:

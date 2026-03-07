@@ -13,7 +13,6 @@ from tqdm import tqdm
 import torch.nn.functional as F
 
 from surya.common.surya import SuryaModelOutput
-from surya.common.xla import mark_step
 from surya.common.predictor import BasePredictor
 
 from surya.foundation.loader import FoundationModelLoader
@@ -22,7 +21,6 @@ from surya.foundation.util import (
 )
 from surya.common.surya.schema import TaskNames
 from surya.foundation.cache.dynamic_ops import DynamicOpsCache
-from surya.foundation.cache.static_ops import StaticOpsCache
 
 from surya.settings import settings
 from surya.logging import get_logger, configure_logging
@@ -58,7 +56,6 @@ class FoundationPrompt:
     task_name: TaskNames
     image: np.ndarray
     text: str
-    math_mode: bool
 
 
 class FoundationPredictor(BasePredictor):
@@ -67,13 +64,10 @@ class FoundationPredictor(BasePredictor):
         settings.RECOGNITION_BATCH_SIZE
     )  # Default to the recognition batch size
     torch_dtype = None  # No default, loader picks the dtype based on device properties - bf16/fp16
-    default_batch_sizes = {"cpu": 32, "mps": 64, "cuda": 256, "xla": 64}
+    default_batch_sizes = {"cpu": 32, "mps": 64, "cuda": 256}
     encoder_chunk_size: int = 4096  # Default chunk size
-    encoder_chunk_sizes = {"cpu": 4096, "mps": 4096, "cuda": 32768, "xla": 32768}
-    extra_token_count = {
-        "xla": 128
-    }  # We have to pad the XLA cache since we don't use sliding window
-    min_prefill_ratio: int = 1 if settings.FOUNDATION_XLA else 0.2
+    encoder_chunk_sizes = {"cpu": 4096, "mps": 4096, "cuda": 32768}
+    min_prefill_ratio: float = 0.2
     min_trim_length: int = 50
     tasks = {
         TaskNames.ocr_with_boxes: {
@@ -150,7 +144,7 @@ class FoundationPredictor(BasePredictor):
         return chunk_size
 
     def setup_cache(self, batch_size: int, max_cache_len: int, max_sliding_window: int):
-        kv_cache_cls = StaticOpsCache if settings.FOUNDATION_XLA else DynamicOpsCache
+        kv_cache_cls = DynamicOpsCache
         self.kv_cache = kv_cache_cls(
             self.model.config,
             batch_size,
@@ -175,11 +169,10 @@ class FoundationPredictor(BasePredictor):
         task_names: List[str],
         images: List[Image.Image],
         input_text: List[str | None],
-        math_modes: List[bool],
     ):
         batch = []
-        for image, text, task_name, math_mode in zip(
-            images, input_text, task_names, math_modes
+        for image, text, task_name in zip(
+            images, input_text, task_names
         ):
             image_size = self.tasks[task_name]["img_size"]
 
@@ -199,7 +192,7 @@ class FoundationPredictor(BasePredictor):
                 text = ""
             inputs = [
                 {"type": "image", "image": image, "rotated": False},
-                {"type": "text", "text": text.strip(), "math": math_mode},
+                {"type": "text", "text": text.strip()},
             ]
             batch.append({"task": task_name, "inputs": inputs})
 
@@ -491,9 +484,6 @@ class FoundationPredictor(BasePredictor):
             task_names=[p.task_name for p in prompts],
             images=[p.image for p in prompts],
             input_text=[p.text for p in prompts],
-            math_modes=[
-                p.math_mode for p in prompts
-            ],  # Pass math mode to the processor
         )
         processed_inputs = self.processor(
             batch_input,
@@ -560,7 +550,6 @@ class FoundationPredictor(BasePredictor):
                 valid_batch_size=valid_batch_size,
                 max_batch_size=self.kv_cache.max_batch_size,
             )
-            mark_step()
 
             outputs = self.model(
                 input_ids=input_ids,
@@ -719,7 +708,6 @@ class FoundationPredictor(BasePredictor):
         batch_size: int | None = None,
         max_tokens: int | None = None,
         max_sliding_window: int | None = None,
-        math_mode: bool = True,
         drop_repeated_tokens: bool = True,
         max_lookahead_tokens: Optional[int] = None,
         top_k: int = 0,
@@ -745,7 +733,7 @@ class FoundationPredictor(BasePredictor):
             max_sliding_window = self.model.config.sliding_window
         self.setup_cache(
             batch_size,
-            max_cache_len=max_image_tokens + max_sliding_window + self.extra_token_count.get(settings.TORCH_DEVICE_MODEL, 0),
+            max_cache_len=max_image_tokens + max_sliding_window,
             max_sliding_window=max_sliding_window,
         )
 
@@ -753,7 +741,7 @@ class FoundationPredictor(BasePredictor):
         for idx, (img, txt, task) in enumerate(zip(images, input_texts, task_names)):
             self.prompt_queue.append(
                 FoundationPrompt(
-                    id=idx, task_name=task, text=txt, image=img, math_mode=math_mode
+                    id=idx, task_name=task, text=txt, image=img
                 )
             )
             batch_max_tokens[idx] = (
@@ -827,7 +815,6 @@ class FoundationPredictor(BasePredictor):
                 updated_inputs, outputs = self.decode(
                     current_inputs, max_lookahead_tokens=max_lookahead_tokens
                 )
-                mark_step()
 
                 predicted_tokens_cpu = outputs.preds.cpu()
                 scores_cpu = outputs.scores.cpu()
@@ -903,7 +890,6 @@ class FoundationPredictor(BasePredictor):
                             self.batch_prompt_mapping[b_idx] = None
                             pbar.update(1)
 
-            # Update inputs and mark XLA step
             current_inputs = updated_inputs
 
         pbar.close()

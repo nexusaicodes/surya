@@ -7,7 +7,7 @@ from surya.input.processing import slice_bboxes_from_image
 from surya.settings import settings
 import os
 from concurrent.futures import ProcessPoolExecutor
-from surya.recognition.languages import CODE_TO_LANGUAGE
+CODE_TO_LANGUAGE = {"en": "English"}
 from surya.recognition import RecognitionPredictor
 from surya.detection import DetectionPredictor
 

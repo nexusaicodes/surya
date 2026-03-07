@@ -10,7 +10,7 @@ from surya.debug.text import draw_text_on_image
 from surya.foundation import FoundationPredictor
 from surya.recognition import RecognitionPredictor
 from surya.settings import settings
-from surya.recognition.languages import CODE_TO_LANGUAGE
+CODE_TO_LANGUAGE = {"en": "English"}
 from benchmark.utils.tesseract import (
     tesseract_ocr_parallel,
     surya_lang_to_tesseract,
@@ -23,16 +23,7 @@ import json
 import time
 from tabulate import tabulate
 
-KEY_LANGUAGES = [
-    "Chinese",
-    "Spanish",
-    "English",
-    "Arabic",
-    "Hindi",
-    "Bengali",
-    "Russian",
-    "Japanese",
-]
+KEY_LANGUAGES = ["English"]
 
 
 def list_in(lst: str | list, lst2: list):
@@ -368,11 +359,6 @@ def main(
                 print(f"Pred: {pred_line.text}")
                 print(f"Ref: {ref_line}")
                 print()
-
-    if settings.TORCH_DEVICE == "xla":
-        import torch_xla.debug.metrics as met
-
-        print(met.short_metrics_report())
 
 
 if __name__ == "__main__":

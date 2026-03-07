@@ -47,8 +47,7 @@ class DetectionModelLoader(ModelLoader):
             logger.info(
                 f"Compiling detection model {self.checkpoint} on device {device} with dtype {dtype}"
             )
-            compile_args = {"backend": "openxla"} if device == "xla" else {}
-            model = torch.compile(model, **compile_args)
+            model = torch.compile(model)
 
         logger.debug(
             f"Loaded detection model {self.checkpoint} from {EfficientViTForSemanticSegmentation.get_local_path(self.checkpoint)} onto device {device} with dtype {dtype}"

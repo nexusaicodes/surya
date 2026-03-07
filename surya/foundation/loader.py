@@ -5,11 +5,10 @@ from transformers.utils import is_flash_attn_2_available
 
 from surya.common.load import ModelLoader
 from surya.common.surya.config import SuryaModelConfig
-from surya.common.surya import SuryaModel, SuryaXLAModel
+from surya.common.surya import SuryaModel
 from surya.common.surya.processor import SuryaOCRProcessor
 from surya.common.surya.processor.tokenizer import SuryaOCRTokenizer
 from surya.common.util import is_flash_attn_2_supported
-from surya.common.xla import get_compile_args
 from surya.logging import get_logger
 from surya.settings import settings
 
@@ -51,16 +50,11 @@ class FoundationModelLoader(ModelLoader):
         elif is_flash_attn_2_available() and is_flash_attn_2_supported(device):
             config.decoder._attn_implementation = "flash_attention_2"
             config.vision_encoder._attn_implementation = "flash_attention_2"
-        elif device == "xla":
-            config.decoder._attn_implementation = "sdpa"
-            config.vision_encoder._attn_implementation = "sdpa"
         else:
             config.decoder._attn_implementation = "sdpa"
             config.vision_encoder._attn_implementation = "sdpa"
 
         model_cls = SuryaModel
-        if device == "xla":
-            model_cls = SuryaXLAModel
 
         config._attn_implementation_autoset = True
         config.vision_encoder._attn_implementation_autoset = True
@@ -82,9 +76,8 @@ class FoundationModelLoader(ModelLoader):
             logger.info(
                 f"Compiling foundation model {self.checkpoint} on device {device} with dtype {dtype}"
             )
-            compile_args = get_compile_args(device)
-            model.vision_encoder = torch.compile(model.vision_encoder, **compile_args)
-            model.decoder = torch.compile(model.decoder, **compile_args)
+            model.vision_encoder = torch.compile(model.vision_encoder)
+            model.decoder = torch.compile(model.decoder)
 
         logger.debug(
             f"Loaded recognition model {self.checkpoint} from {SuryaModel.get_local_path(self.checkpoint)} onto device {model.device} with dtype {dtype}, using decoder attention mechanism {model.config.decoder._attn_implementation}, encoder attention mechanism {model.config.vision_encoder._attn_implementation}."

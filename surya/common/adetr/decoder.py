@@ -11,7 +11,6 @@ from transformers.modeling_outputs import BaseModelOutputWithNoAttention
 from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS
 
 from surya.common.pretrained import SuryaPreTrainedModel
-from surya.common.xla import mark_step
 
 _MAX_SQRT_GRADIENT = 1000.0
 

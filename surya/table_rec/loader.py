@@ -65,9 +65,8 @@ class TableRecModelLoader(ModelLoader):
             logger.info(
                 f"Compiling table recognition model {self.checkpoint} on device {device} with dtype {dtype}"
             )
-            compile_args = {"backend": "openxla"} if device == "xla" else {}
-            model.encoder = torch.compile(model.encoder, **compile_args)
-            model.decoder = torch.compile(model.decoder, **compile_args)
+            model.encoder = torch.compile(model.encoder)
+            model.decoder = torch.compile(model.decoder)
 
         logger.debug(
             f"Loaded table recognition model {self.checkpoint} from {TableRecEncoderDecoderModel.get_local_path(self.checkpoint)} onto device {device} with dtype {dtype}"

@@ -33,7 +33,6 @@ NO_OUTPUT_TOKEN = "<NOP>"
 IMAGE_ROTATED_TOKEN = "<ROT>"
 REGISTER_TOKENS = ["<REG1>", "<REG2>", "<REG3>", "<REG4>"]
 BEACON_TOKEN = "<BEACON>"
-NOMATH_TOKEN = "<NO-MATH>"
 
 # Task specific tokens
 OCR_WITH_BOXES_BOS_TOKEN = "<OCR-WB>"
@@ -90,8 +89,6 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
         self.eoi_token_id = self.special_token_mapping.get(EOI_TOKEN)
         self.no_output_token = self.special_token_mapping.get(NO_OUTPUT_TOKEN)
         self.image_rotated_token = self.special_token_mapping.get(IMAGE_ROTATED_TOKEN)
-        self.nomath_token = self.special_token_mapping.get(NOMATH_TOKEN)
-
         self.bos_token_id = {
             TaskNames.ocr_with_boxes: self.special_token_mapping.get(
                 OCR_WITH_BOXES_BOS_TOKEN
@@ -117,19 +114,6 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
         self.ignore_bbox_token_ids = [
             v
             for (k, v) in self.ocr_tokenizer.SPECIAL_TOKEN_MAPPING.items()
-            if k not in self.ocr_tokenizer.special_tokens["math_external"]
-        ]
-        math_end_token = "</math>"
-        self.math_start_token_ids = [
-            v
-            for (k, v) in self.ocr_tokenizer.SPECIAL_TOKEN_MAPPING.items()
-            if k in self.ocr_tokenizer.special_tokens["math_external"]
-            and k != math_end_token
-        ]
-        self.math_end_token_ids = [
-            v
-            for (k, v) in self.ocr_tokenizer.SPECIAL_TOKEN_MAPPING.items()
-            if k == math_end_token
         ]
 
         if self.num_register_tokens > len(self.register_token_ids):
@@ -202,13 +186,7 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
         Resizes the input image to the closest multiple of tile_size while preserving the aspect ratio
         and returns a tensor of image tiles.
         """
-        extra_multipler = (
-            4 if settings.FOUNDATION_XLA else 1
-        )  # Needed to force same size grid_thws per row with padding
-
-        factor = (
-            self.patch_size * self.merge_size * extra_multipler
-        )  # Make a multiple of window size
+        factor = self.patch_size * self.merge_size  # Make a multiple of window size
 
         height, width = image.shape[:2]
 
@@ -280,14 +258,9 @@ class SuryaOCRProcessor(S3DownloaderMixin, ProcessorMixin):
 
     def _process_text_input(self, text_input: TextInput, task: str) -> ProcessorOutput:
         input_text = text_input.get("text", None)
-        math_mode = text_input.get("math", False)
 
         input_ids = self.ocr_tokenizer(input_text, tasks=task)["input_ids"][0]
         input_ids = [self.offsets["ocr"] + id for id in input_ids]
-
-        # nomath token does not work for layout
-        if not math_mode and task != "layout":
-            input_ids.insert(0, self.nomath_token)
 
         return ProcessorOutput(
             input_ids=input_ids,

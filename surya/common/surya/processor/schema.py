@@ -28,7 +28,6 @@ class ImageInput(ProcessorInput):
 class TextInput(ProcessorInput):
     type: Literal["text"]
     text: str
-    math: bool
 
 
 class ProcessorOutput(TypedDict):

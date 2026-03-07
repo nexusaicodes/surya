@@ -34,7 +34,7 @@ All models follow a predictor pattern inheriting from `surya/common/predictor.py
 
 ### Model Hierarchy
 - **FoundationPredictor** (`surya/foundation/__init__.py`) — Core autoregressive model shared by OCR, layout, and table structure tasks. Uses continuous batching with a KV cache, beacon tokens, and multi-token prediction. This is the most complex component.
-- **RecognitionPredictor** (`surya/recognition/__init__.py`) — Wraps FoundationPredictor. Detects text lines (via DetectionPredictor internally), slices image regions, runs OCR, and reassembles results with character-level bounding boxes. Math mode is disabled.
+- **RecognitionPredictor** (`surya/recognition/__init__.py`) — Wraps FoundationPredictor. Detects text lines (via DetectionPredictor internally), slices image regions, runs OCR, and reassembles results with character-level bounding boxes.
 - **LayoutPredictor** (`surya/layout/__init__.py`) — Wraps FoundationPredictor for layout analysis + reading order. Labels: Table, SectionHeader, Text, Picture, Figure, Caption, ListItem, Form, PageHeader, PageFooter, Footnote, Equation, Code, TableOfContents.
 - **DetectionPredictor** (`surya/detection/__init__.py`) — Standalone segmentation model (EfficientViT-based) for text line detection. Used internally by RecognitionPredictor; no standalone CLI.
 - **TableRecPredictor** (`surya/table_rec/__init__.py`) — Standalone encoder-decoder model for table structure. Two-pass: first predicts rows/columns, then predicts cells within rows.
@@ -42,7 +42,7 @@ All models follow a predictor pattern inheriting from `surya/common/predictor.py
 ### Key Directories
 - `surya/common/` — Shared utilities: `predictor.py` (base class), `polygon.py`, model loaders (`load.py`, `s3.py`), architecture bases (`surya/`, `donut/`, `adetr/`)
 - `surya/foundation/` — Foundation model: loader, processor, cache implementations (dynamic/static), utilities
-- `surya/scripts/` — Finetuning script (`finetune_ocr.py`) and legacy CLI entry points
+- `surya/scripts/` — Finetuning script (`finetune_ocr.py`)
 - `surya/settings.py` — All configuration via pydantic-settings `Settings` class. Every setting is overridable via environment variables.
 - `surya/input/` — Image preprocessing (slicing, polygon extraction)
 - `benchmark/` — Benchmark scripts for detection, recognition, layout, table recognition

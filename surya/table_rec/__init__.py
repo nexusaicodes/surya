@@ -7,7 +7,6 @@ import torch
 from PIL import Image
 from tqdm import tqdm
 
-from surya.common.xla import mark_step
 from surya.common.predictor import BasePredictor
 from surya.table_rec.schema import TableCell, TableRow, TableCol, TableResult
 from surya.common.polygon import PolygonBox
@@ -25,7 +24,6 @@ class TableRecPredictor(BasePredictor):
         "cpu": 8,
         "mps": 8,
         "cuda": 32,
-        "xla": 16
     }
 
     def __call__(self, images: List[Image.Image], batch_size: int | None = None) -> List[TableResult]:
@@ -188,7 +186,6 @@ class TableRecPredictor(BasePredictor):
                 current_batch_size,
                 batch_size
             )
-            mark_step()
 
             row_query_items = []
             row_encoder_hidden_states = []
@@ -228,8 +225,7 @@ class TableRecPredictor(BasePredictor):
                 cell_predictions.extend(
                     self.inference_loop(cell_batch_hidden_states, cell_batch_input_ids, cell_batch_size, batch_size)
                 )
-                mark_step()
-
+    
             result = self.decode_batch_predictions(rowcol_predictions, cell_predictions, orig_sizes, idx_map, shaper)
             output_order.extend(result)
 
