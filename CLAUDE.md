@@ -9,26 +9,25 @@ Trimmed fork of Surya focused on **English-only OCR, layout analysis, and table 
 ## Build & Development Commands
 
 ```bash
-# Install (requires Python 3.10+, PyTorch 2.7+)
-poetry install              # main + dev deps
-poetry install --with dev   # dev dependencies
-poetry shell                # activate venv
+# Install (requires Python 3.10+, PyTorch 2.7+, uv)
+uv sync                     # main deps
+uv sync --group dev         # main + dev deps
 
 # Run tests
-pytest                      # all tests
-pytest tests/test_recognition.py  # single test file
-pytest tests/test_recognition.py::test_name  # single test
+uv run pytest                      # all tests
+uv run pytest tests/test_recognition.py  # single test file
+uv run pytest tests/test_recognition.py::test_name  # single test
 
 # CLI tools (after install)
-surya_ocr DATA_PATH         # OCR: detect text lines + read text
-surya_layout DATA_PATH      # Layout: detect tables, headers, sections, etc.
-surya_table DATA_PATH       # Table recognition: rows, columns, cells
+uv run surya_ocr DATA_PATH         # OCR: detect text lines + read text
+uv run surya_layout DATA_PATH      # Layout: detect tables, headers, sections, etc.
+uv run surya_table DATA_PATH       # Table recognition: rows, columns, cells
 
 # Benchmarks
-python benchmark/detection.py --max_rows 256
-python benchmark/recognition.py
-python benchmark/layout.py
-python benchmark/table_recognition.py --max_rows 1024
+uv run python benchmark/detection.py --max_rows 256
+uv run python benchmark/recognition.py
+uv run python benchmark/layout.py
+uv run python benchmark/table_recognition.py --max_rows 1024
 ```
 
 ### CLI common flags

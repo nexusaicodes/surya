@@ -1,27 +1,22 @@
-name: Python package
+name: Publish package
+
 on:
   push:
     tags:
       - "v*.*.*"
+
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
       - name: Set up Python 3.11
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
-      - name: Install python dependencies
-        run: |
-          pip install poetry
-          poetry install
+        run: uv python install 3.11
       - name: Build package
-        run: |
-          poetry build
+        run: uv build
       - name: Publish package
+        run: uv publish
         env:
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          poetry config pypi-token.pypi "$PYPI_TOKEN"
-          poetry publish
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
